@@ -11,12 +11,20 @@ def get_color(patches) -> tuple[float, float, float]:
 
 
 
-def draw_histogram(data: np.ndarray, label: str, ax: Axes, bins: int, draw_mean: bool = True) -> Axes:
+def draw_histogram(data: np.ndarray,
+                   tissue_label: str,
+                   parameter_label: str,
+                   parameter_unit: str,
+                   ax: Axes,
+                   bins: int,
+                   draw_mean: bool = True,
+                   color: str | None = None) -> Axes:
     """Draw histogram into preexisting axes"""
     mean = data.mean()
-    label = f'{label} avg = {mean:.3f} s'
-        
-    _, _, patches = ax.hist(data, bins=bins, label=label)
+    unit = f' {parameter_unit}' if parameter_unit else ''
+    label = f'{tissue_label} ' + '$\\langle$' + f'{parameter_label}' + '$\\rangle$' + f' = {mean:.3f}{parameter_unit}'
+
+    _, _, patches = ax.hist(data, bins=bins, label=label, color=color)
     color = get_color(patches)
     
     if draw_mean:    
