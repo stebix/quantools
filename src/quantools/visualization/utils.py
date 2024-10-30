@@ -54,4 +54,10 @@ def get_canonical_axis_label(parameter_name: str, unit: str):
 def get_color(patches) -> tuple[float, float, float]:
     """Get color of patch(es) in a bar container (i.e. `ax.hist` return value)"""
     patch = patches.patches[0]
-    return patch.get_facecolor()    
+    return patch.get_facecolor()
+
+
+def get_value_and_uncert(name: str, parameters: dict[str, dict[str, float]]) -> tuple[float, float]:
+    value = parameters[name]['mean']
+    uncert = parameters[name]['stdev']
+    return (value, uncert)

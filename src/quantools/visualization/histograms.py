@@ -49,6 +49,7 @@ def plot_parameter(segmentation: Segmentation,
                    ylabel: str | None = None,
                    yscale: str = 'linear',
                    parameter_remapping: Mapping | None = None,
+                   axtitle: str = '',
                    suptitle: str = ''
                   ) -> tuple[Figure, Axes]:
     if ax is None:
@@ -86,6 +87,7 @@ def plot_parameter(segmentation: Segmentation,
     
     ax.set(**labels)
     ax.legend()
+    ax.set_title(axtitle)
     fig.suptitle(suptitle)
     fig.tight_layout()
     return (fig, ax)

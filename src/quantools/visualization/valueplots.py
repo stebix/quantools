@@ -10,6 +10,10 @@ import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
+from quantools.segmentinfo.unit import Unit
+from quantools.visualization.utils import get_value_and_uncert
+
+
 def plot_parameter_single(tissues: Mapping[str, Mapping[str, float]],
                           parameter_name: str,
                           ax: Axes | None = None,
@@ -99,7 +103,8 @@ def plot_grouping(position: float,
                   capsize: float = 5,
                   unit: Literal['seconds', 'milliseconds'] = 'seconds',
                   prefix: str = '',
-                  postfix : str = ''
+                  postfix : str = '',
+                  marker: str = 'o'
                   ) -> tuple[Figure, Axes]:
     """Plot grouping in (T1, T2) grid."""
     if ax is None:
@@ -135,7 +140,8 @@ def plot_grouping(position: float,
             raise ValueError(f'invalid axis specification: {xaxis} and {yaxis}')
         
         label = f'{prefix}{name}{postfix}'
-        ax.errorbar(x, y, xerr=xerr, yerr=yerr, capsize=capsize, label=label)
+        ax.errorbar(x, y, xerr=xerr, yerr=yerr, marker=marker,
+                    capsize=capsize, label=label)
     
     ax.legend()
     ax.set(**labels)

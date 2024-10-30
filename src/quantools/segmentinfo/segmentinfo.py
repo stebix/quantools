@@ -12,20 +12,24 @@ import numpy as np
 
 from quantools.segmentinfo.unit import Unit
 
+def value_repr(obj) -> str:
+    if isinstance(obj, np.ndarray):
+        return f'(shape={obj.shape}, dtype={obj.dtype})'
+    else:
+        return str(obj)
+
+
 @attrs.define
 class ParameterROI:
     name: str
-    values: np.ndarray = attrs.field(repr=lambda arr: arr.shape)
+    values: np.ndarray | None = attrs.field(repr=value_repr)
     unit: Unit
 
 
 @attrs.define
 class TissueROI:
     name: str
-    T1: ParameterROI
-    T2: ParameterROI
-    M0: ParameterROI
-    IP: ParameterROI
+    parameters: dict[str, ParameterROI]
     mask: np.ndarray = attrs.field(repr=lambda arr: f'(shape={arr.shape}, dtype={arr.dtype}')
     volume: int = attrs.field(init=False)
         
@@ -33,24 +37,32 @@ class TissueROI:
         self.volume = np.sum(self.mask)
         
     def __getitem__(self, item_name: str) -> ParameterROI | np.ndarray:
-        mapping = {'T1' : self.T1, 'T2' : self.T2, 'M0' : self.M0, 'IP' : self.IP, 'mask' : self.mask}
+        mapping = {**self.parameters, 'mask' : self.mask, 'name' : self.name, 'volume' : self.volume}
         return mapping[item_name]
+    
+    def __iter__(self):
+        return iter(self.parameters.values())
     
     @classmethod
     def create_from(cls, name: str, maps: Mapping[str, np.ndarray], mask: np.ndarray, unit: str | Unit = 'seconds'):
         """Create single tissue ROI specification."""
         if not isinstance(unit, Unit):
             unit = Unit(unit)
-            
-        T1 = ParameterROI(name='T1', values=maps['T1'][mask], unit=unit)
-        T2 = ParameterROI(name='T2', values=maps['T2'][mask], unit=unit)
-        M0 = ParameterROI(name='M0', values=maps['M0'][mask], unit=unit)
-        IP = ParameterROI(name='IP', values=maps['IP'][mask], unit=unit)
 
-        return cls(name=name, T1=T1, T2=T2, M0=M0, IP=IP, mask=mask)
+        parameters = {}
+        canonical_parameters = [('T1', unit), ('T2', unit), ('M0', Unit.NONE), ('IP', Unit.NONE)]
+        for parameter_name, parameter_unit in canonical_parameters:
+            try:
+                values = maps[parameter_name][mask]
+            except (TypeError, KeyError):
+                continue
+
+            parameters[parameter_name] = ParameterROI(name=parameter_name,
+                                                      values=values,
+                                                      unit=parameter_unit)
+        
+        return cls(name=name, mask=mask, parameters=parameters)
     
-    def __iter__(self):
-        return iter([self.T1, self.T2, self.M0, self.IP])
 
     
 @attrs.define
