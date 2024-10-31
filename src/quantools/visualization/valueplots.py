@@ -104,7 +104,8 @@ def plot_grouping(position: float,
                   unit: Literal['seconds', 'milliseconds'] = 'seconds',
                   prefix: str = '',
                   postfix : str = '',
-                  marker: str = 'o'
+                  marker: str = 'o',
+                  axtitle: str = ''
                   ) -> tuple[Figure, Axes]:
     """Plot grouping in (T1, T2) grid."""
     if ax is None:
@@ -145,4 +146,5 @@ def plot_grouping(position: float,
     
     ax.legend()
     ax.set(**labels)
+    ax.set_title(axtitle)
     return (fig, ax)
