@@ -3,6 +3,7 @@ Visualization utilities for the quantools package.
 
 @Author: Jannik Stebani 2024
 """
+import warnings
 from string import Template
 
 
@@ -33,7 +34,15 @@ CANONICAL_AXIS_LABELS: dict[str, dict[str]] = {
     'IP' : {
         'x' : TexCompliantTemplate('Inner product value [a.u.]'),
         'y' : TexCompliantTemplate('Absolute frequency')
-    },
+    }
+}
+
+
+CANONICAL_COLOR_SPECIFICATION: dict[str, str] = {
+    'cochlea' : 'tab:green',
+    'vestibulum' : 'gold',
+    'nerve' : 'tab:blue',
+    'canals' : 'tab:red'
 }
     
 
@@ -61,3 +70,11 @@ def get_value_and_uncert(name: str, parameters: dict[str, dict[str, float]]) -> 
     value = parameters[name]['mean']
     uncert = parameters[name]['stdev']
     return (value, uncert)
+
+
+def get_canonical_tissue_color(name: str) -> str | None:
+    try:
+        return CANONICAL_COLOR_SPECIFICATION[name.lower()]
+    except KeyError:
+        warnings.warn(f'No canonical color specification for tissue "{name}".')
+        return None

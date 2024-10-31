@@ -50,7 +50,8 @@ def plot_parameter(segmentation: Segmentation,
                    yscale: str = 'linear',
                    parameter_remapping: Mapping | None = None,
                    axtitle: str = '',
-                   suptitle: str = ''
+                   suptitle: str = '',
+                   draw_mean: bool = True
                   ) -> tuple[Figure, Axes]:
     if ax is None:
         fig, ax = plt.subplots()
@@ -79,10 +80,11 @@ def plot_parameter(segmentation: Segmentation,
             labels.update({'ylabel' : ylabel})
             
         remapped_parameter_label = parameter_remapping.get(parameter.name, parameter.name)
+        color = tissue.color
             
         draw_histogram(
             data=parameter.values, tissue_label=tissue.name, parameter_label=remapped_parameter_label, parameter_unit=unit,
-            bins=bins, draw_mean=True, ax=ax
+            bins=bins, draw_mean=draw_mean, ax=ax, color=color
         )
     
     ax.set(**labels)

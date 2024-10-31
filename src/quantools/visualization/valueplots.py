@@ -21,7 +21,10 @@ def plot_parameter_single(tissues: Mapping[str, Mapping[str, float]],
                           ylabel: str | None = None,
                           unit: Literal['seconds', 'milliseconds'] = 'seconds',
                           ylim: tuple[float, float] | None = None,
-                          capsize: float = 5
+                          capsize: float = 5,
+                          restrict_errors: bool = True,
+                          prefix: str = '',
+                          postfix: str = ''
                           ) -> tuple[Figure, Axes]:
     """
     Plot parameter categorically into single plot.
@@ -45,11 +48,20 @@ def plot_parameter_single(tissues: Mapping[str, Mapping[str, float]],
         labels.update({'ylabel' : ylabel})
             
     for index, (tissue_name, tissue_statistics) in enumerate(tissues.items()):
+
         value = tissue_statistics[parameter_name]['mean']
         uncert = tissue_statistics[parameter_name]['stdev']
+
+        if restrict_errors:
+            diff = value - uncert
+            uncert = uncert + diff if diff < 0 else uncert
+
+        display_tissue_name = f'{prefix}{tissue_name}{postfix}'
+
         ax.errorbar(tissue_name, value,
-                    yerr=uncert, label=tissue_name, marker='o',
+                    yerr=uncert, label=display_tissue_name, marker='o',
                     capsize=capsize)
+        
     kwargs = {'ylim' : ylim}
     ax.set(**labels, **kwargs)
     ax.legend()
@@ -63,6 +75,9 @@ def plot_T1_single(tissues: Mapping[str, Mapping[str, float]],
                    ylabel: str | None = None,
                    unit: Literal['seconds', 'milliseconds'] = 'seconds',
                    ylim: tuple[float, float] = (1.75, 5.0),
+                   restrict_errors: bool = True,
+                   prefix: str = '',
+                   postfix: str = '',
                    **kwargs
                    ) -> tuple[Figure, Axes]:
     
@@ -72,7 +87,10 @@ def plot_T1_single(tissues: Mapping[str, Mapping[str, float]],
         'xlabel' : 'Tissue Index',
         'ylabel' : f'$T_1$ spin-lattice relaxation time [{unit_str}]'
     }
-    return plot_parameter_single(tissues, parameter_name='T1', ax=ax, **labels, unit=unit, ylim=ylim, **kwargs)
+    return plot_parameter_single(tissues, parameter_name='T1', ax=ax, **labels,
+                                 unit=unit, ylim=ylim, restrict_errors=restrict_errors,
+                                 prefix=prefix, postfix=postfix,
+                                 **kwargs)
 
 
 
@@ -82,6 +100,9 @@ def plot_T2_single(tissues: Mapping[str, Mapping[str, float]],
                    ylabel: str | None = None,
                    unit: Literal['seconds', 'milliseconds'] = 'seconds',
                    ylim: tuple[float, float] = (0.01, 2.0),
+                   restrict_errors: bool = True,
+                   prefix: str = '',
+                   postfix: str = '',
                    **kwargs
                    ) -> tuple[Figure, Axes]:
     
@@ -91,12 +112,14 @@ def plot_T2_single(tissues: Mapping[str, Mapping[str, float]],
         'xlabel' : 'Tissue Index',
         'ylabel' : f'$T_2$ spin-spin relaxation time [{unit_str}]'
     }
-    return plot_parameter_single(tissues, parameter_name='T2', ax=ax, **labels, unit=unit, ylim=ylim, **kwargs)
+    return plot_parameter_single(tissues, parameter_name='T2', ax=ax, **labels,
+                                 unit=unit, ylim=ylim, restrict_errors=restrict_errors,
+                                 prefix=prefix, postfix=postfix,
+                                 **kwargs)
 
 
 
-def plot_grouping(position: float,
-                  elements: Mapping[str, dict[str, float]],
+def plot_grouping(elements: Mapping[str, dict[str, float]],
                   ax: Axes | None = None,
                   xaxis: Literal['T1', 'T2'] = 'T1',
                   yaxis: Literal['T1', 'T2'] = 'T2',
@@ -105,9 +128,51 @@ def plot_grouping(position: float,
                   prefix: str = '',
                   postfix : str = '',
                   marker: str = 'o',
-                  axtitle: str = ''
+                  axtitle: str = '',
+                  restrict_errors: bool = True
                   ) -> tuple[Figure, Axes]:
-    """Plot grouping in (T1, T2) grid."""
+    """
+    Plot grouping of values in (T1, T2) axes.
+    
+    Parameters
+    ----------
+
+    elements : Mapping[str, dict[str, float]]
+        Mapping of element names to dictionaries of T1 and T2 values.
+
+    ax : Axes | None, optional
+        Matplotlib axes object. If None, a new figure is created.
+        Default is None.
+
+    xaxis : Literal['T1', 'T2'], optional
+        X axis takes this value. Default is 'T1'.
+
+    yaxis : Literal['T1', 'T2'], optional
+        Y axis takes this value. Default is 'T2'.
+
+    capsize : float, optional
+        Errorbar capsize. Default is 5.
+
+    unit : Literal['seconds', 'milliseconds'], optional
+        Unit of the relaxation times. Default is 'seconds'.
+
+    prefix : str, optional
+        Prefix to add to the element names. Can be used to disambiguate
+        different groups of elements. Default is ''.
+
+    postfix : str, optional
+        Postfix to add to the element names. Can be used to disambiguate
+        different groups of elements. Default is ''.
+
+    marker : str, optional
+        Marker style for the errorbars. Default is 'o'.
+
+    axtitle : str, optional
+        Title of the axes. Default is ''.
+
+    restrict_errors: bool, optional
+        If True, restrict errorbars to positive values. Default is True.
+    """
     if ax is None:
         fig, ax = plt.subplots()
     else:
@@ -139,6 +204,12 @@ def plot_grouping(position: float,
             y, yerr = T1_value, T1_uncert
         else:
             raise ValueError(f'invalid axis specification: {xaxis} and {yaxis}')
+        
+        if restrict_errors:
+            xdiff = x - xerr
+            ydiff = y - yerr
+            xerr = xerr + xdiff if xdiff < 0 else xerr
+            yerr = yerr + ydiff if ydiff < 0 else yerr
         
         label = f'{prefix}{name}{postfix}'
         ax.errorbar(x, y, xerr=xerr, yerr=yerr, marker=marker,

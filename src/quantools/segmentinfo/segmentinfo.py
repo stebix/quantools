@@ -11,6 +11,8 @@ import numpy as np
 
 
 from quantools.segmentinfo.unit import Unit
+from quantools.visualization.utils import get_canonical_tissue_color
+
 
 def value_repr(obj) -> str:
     if isinstance(obj, np.ndarray):
@@ -28,10 +30,35 @@ class ParameterROI:
 
 @attrs.define
 class TissueROI:
+    """
+    Encapsulate information about ROI of a single tissue.
+
+    Parameters
+    ----------
+
+    name : str
+        Name of the tissue.
+
+    parameters : dict[str, ParameterROI]
+        Dictionary mapping parameter names to ParameterROI objects.
+        Usually T1 or T2 that then is related to the values and unit inside the ParameterROI object.
+
+    mask : np.ndarray
+        Mask of the tissue.
+
+    volume : int
+        Total volume of the tissue in voxel units.
+
+    color : str | None
+        Color specification for the tissue.
+        Can be used in downstream visualizations.
+        Default is None.
+    """
     name: str
     parameters: dict[str, ParameterROI]
     mask: np.ndarray = attrs.field(repr=lambda arr: f'(shape={arr.shape}, dtype={arr.dtype}')
     volume: int = attrs.field(init=False)
+    color: str | None = None
         
     def __attrs_post_init__(self):
         self.volume = np.sum(self.mask)
@@ -44,7 +71,8 @@ class TissueROI:
         return iter(self.parameters.values())
     
     @classmethod
-    def create_from(cls, name: str, maps: Mapping[str, np.ndarray], mask: np.ndarray, unit: str | Unit = 'seconds'):
+    def create_from(cls, name: str, maps: Mapping[str, np.ndarray], mask: np.ndarray,
+                    unit: str | Unit = 'seconds', color: str | None = None):
         """Create single tissue ROI specification."""
         if not isinstance(unit, Unit):
             unit = Unit(unit)
@@ -61,7 +89,7 @@ class TissueROI:
                                                       values=values,
                                                       unit=parameter_unit)
         
-        return cls(name=name, mask=mask, parameters=parameters)
+        return cls(name=name, mask=mask, parameters=parameters, color=color)
     
 
     
@@ -98,7 +126,8 @@ class Segmentation:
     def create_from(cls, parameters: Mapping[str, np.ndarray], masks: Mapping[str, np.ndarray]):
         tissues = []
         for tissue_name, mask in masks.items():
+            color = get_canonical_tissue_color(tissue_name)
             tissues.append(
-                TissueROI.create_from(name=tissue_name, maps=parameters, mask=mask)
+                TissueROI.create_from(name=tissue_name, maps=parameters, mask=mask, color=color)
             )
         return cls(tissues=tissues)
