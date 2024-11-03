@@ -31,7 +31,7 @@ def draw_histogram(data: np.ndarray,
     """Draw histogram into preexisting axes"""
     mean = data.mean()
     unit = f' {parameter_unit}' if parameter_unit else ''
-    label = f'{tissue_label} ' + '$\\langle$' + f'{parameter_label}' + '$\\rangle$' + f' = {mean:.3f}{parameter_unit}'
+    label = f'{tissue_label} ' + '$\\langle$' + f'{parameter_label}' + '$\\rangle$' + f' = {mean:.3f}{unit}'
 
     _, _, patches = ax.hist(data, bins=bins, label=label, color=color)
     color = get_color(patches)
