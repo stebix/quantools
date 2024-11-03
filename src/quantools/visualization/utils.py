@@ -44,6 +44,13 @@ CANONICAL_COLOR_SPECIFICATION: dict[str, str] = {
     'nerve' : 'tab:blue',
     'canals' : 'tab:red'
 }
+
+SLICER_COLOR_SPECIFICATION: dict[str, str] = {
+    'cochlea' : '#80ae80',
+    'vestibulum' : '#f1d691',
+    'canals' : '#b17a65',
+    'nerve' : '#6fb8d2'
+}
     
 
 def get_canonical_axis_label(parameter_name: str, unit: str):
@@ -74,7 +81,7 @@ def get_value_and_uncert(name: str, parameters: dict[str, dict[str, float]]) -> 
 
 def get_canonical_tissue_color(name: str) -> str | None:
     try:
-        return CANONICAL_COLOR_SPECIFICATION[name.lower()]
+        return SLICER_COLOR_SPECIFICATION[name.lower()]
     except KeyError:
         warnings.warn(f'No canonical color specification for tissue "{name}".')
         return None
